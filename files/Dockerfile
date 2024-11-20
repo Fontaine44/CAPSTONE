@@ -1,11 +1,14 @@
-# To build the docker container
+# To build the docker container (from directory containing Dockerfile)
 ### docker build -t swh-graph-service .
 
-# To run the docker container
+# To run the docker container in interactive mode
 ### docker run -p 5009:5009 -it swh-graph-service
 
 # To run inside the container
 ### swh graph rpc-serve -g compressed/graph
+
+# To run the contianer in detached mode
+### docker run -p 5009:5009 -d swh-graph-service --name swh-graph-container
 
 FROM debian:latest
 
@@ -45,13 +48,6 @@ RUN pip install swh.graph
 # Download dataset
 RUN swh graph download --name 2021-03-23-popular-3k-python 2021-03-23-popular-3k-python/compressed
 
-# Install AWS CLI
-# RUN apt-get update && apt-get install -y \
-#     curl unzip && \
-#     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-#     unzip awscliv2.zip && \
-#     ./aws/install
-
 # Switch to the graph directory
 WORKDIR /root/2021-03-23-popular-3k-python
 
@@ -69,12 +65,11 @@ RUN mkdir -p /root/2021-03-23-popular-3k-python/output
 # Decompress the ids
 RUN zstd -d /root/2021-03-23-popular-3k-python/compressed/graph.nodes.csv.zst -o /root/2021-03-23-popular-3k-python/output/graph.nodes.csv
 
-# Start the server
-# RUN swh graph rpc-serve -g compressed/graph
-
 # Expose the API server port
 EXPOSE 5009
 
 # Default command to start the server with a specified dataset (path to be set on run)
 CMD ["swh", "graph", "rpc-serve", "-g", "compressed/graph"]
+
+# Command to run the container in interactive mode
 # CMD ["/bin/bash"]
