@@ -1,5 +1,4 @@
 SELECT
-    o.id AS repository_id,
     o.url AS repository_url,
     MIN(r.date) AS earliest_commit_date,
     MAX(r.date) AS latest_commit_date,
@@ -8,14 +7,14 @@ FROM
     origin AS o
 JOIN
     origin_visit_status AS ov
-    ON o.id = ov.origin
+    ON o.url = ov.origin
 JOIN
     snapshot_branch AS sb
-    ON ov.snapshot = sb.snapshot_id
+    ON ov.snapshot_id = sb.snapshot_id  
 JOIN
-    (SELECT id, message, author, date, date_offset, date_raw_offset_bytes, directory, type, raw_manifest FROM "orc_python"."revision") AS r
+    revision AS r
     ON sb.target = r.id
 WHERE
     sb.target_type = 'revision'
 GROUP BY
-    o.id, o.url;
+    o.url;
