@@ -40,7 +40,7 @@ RUN python3 -m venv .venv
 ENV PATH="/root/.venv/bin:${PATH}"
 
 # Install swh.graph python package
-RUN pip install swh.graph
+RUN pip install swh.graph grpcio
 
 # Download dataset
 RUN swh graph download --name 2021-03-23-popular-3k-python 2021-03-23-popular-3k-python/compressed
@@ -74,7 +74,8 @@ RUN zstd -d /root/2021-03-23-popular-3k-python/compressed/graph.nodes.csv.zst -o
 
 # Expose the API server port
 EXPOSE 5009
+EXPOSE 50091
 
 # Default command to start the server with a specified dataset (path to be set on run)
-CMD ["swh", "graph", "rpc-serve", "-g", "compressed/graph"]
+CMD ["swh", "graph", "grpc-serve", "-g", "compressed/graph"]
 # CMD ["/bin/bash"]

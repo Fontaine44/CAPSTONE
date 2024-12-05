@@ -2,10 +2,13 @@ import requests
 import os
 import csv
 import random
+import socket
+from urllib.parse import urlparse
 
 CWD = os.path.dirname(os.path.abspath(__file__))
 PATH = os.path.join(CWD, "data", "graph.nodes.csv")
 URL = "http://localhost:5009"
+URL = "http://host.docker.internal:5009"
 
 def make_request(url, headers):
     try:
@@ -21,6 +24,17 @@ def stats_requests():
     headers = {
         "Content-Type": "application/json"
     }
+
+    parsed_url = urlparse(url)
+    hostname = parsed_url.hostname
+    
+    try:
+        # Resolve hostname to IP address
+        ip_address = socket.gethostbyname(hostname)
+        print(f"Request URL: {url}")
+        print(f"Resolved IP Address: {ip_address}")  # Print the resolved IP address
+    except socket.gaierror as e:
+        print(f"Error resolving hostname: {hostname}. Error: {e}")
 
     try:
         print(f"Making request to {url}...")
@@ -69,7 +83,7 @@ def get_neighbours(id):
         print(f"Error writing data to file: {e}")
 
     return content  # Return the content (or failure message)
-
+    
 def extract_random_id():
     with open(PATH, 'r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
@@ -82,8 +96,8 @@ def extract_random_id():
 
 
 if __name__ == '__main__':
-    # response = stats_requests()
-    # print(response)
+    response = stats_requests()
+    print(response)
     # print(extract_ids()[:100])
     # print(extract_random_id())
-    print("hi")
+    # print("hi")

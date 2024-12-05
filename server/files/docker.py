@@ -34,9 +34,9 @@ def check_docker_image_exists(image_name):
 def build_docker_image(image_name):
     try:
         # Build the Docker image
-        if check_docker_image_exists(image_name):
-            print(f"Image '{image_name}' already exists.")
-            return True
+        # if check_docker_image_exists(image_name):
+        #     print(f"Image '{image_name}' already exists.")
+        #     return True
         subprocess.run(["docker", "build", "-t", image_name, "."], check=True)
         print(f"Image '{image_name}' built successfully.")
     except subprocess.CalledProcessError as e:
@@ -48,7 +48,7 @@ def build_docker_image(image_name):
 def run_docker_container(image_name, container_name):
     try:
         # Run the container with interactive mode
-        subprocess.run(["docker", "run", "-d", "-p", "5009:5009", "--name", container_name, image_name], check=True)
+        subprocess.run(["docker", "run", "-d", "-p", "5009:5009", "-p", "5010:50091", "--name", container_name, image_name], check=True)
         print(f"Container '{container_name}' started successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error running container: {e}")
@@ -58,6 +58,10 @@ def run_docker_container(image_name, container_name):
 # Function to copy files from the container to the host
 def docker_cp(container_name, container_path, host_path):
     try:
+        # if file exists, return
+        if os.path.exists(host_path):
+            print(f"File '{host_path}' already exists.")
+            return True
         # Perform docker cp command
         subprocess.run(["docker", "cp", f"{container_name}:{container_path}", host_path], check=True)
         print(f"Copied file from container '{container_name}' to '{host_path}'.")

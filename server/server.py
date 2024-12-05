@@ -1,5 +1,5 @@
 from files.docker import *
-from files.custom_requests import *
+# from files.http_requests import *
 
 def print_line_break():
     print("-"*20)
@@ -15,15 +15,11 @@ def main():
             if run_docker_container(IMAGE_NAME, CONTAINER_NAME):
                 # Copy the file from the container to the host
                 docker_cp(CONTAINER_NAME, TARGET_PATH, DEST_PATH)
-
-        # Make simple request
-        response = stats_requests()
-        print(response)
-        print_line_break()
-
-        id = extract_random_id()
-        print(f"Random ID: {id}")
-        response = get_neighbours(id)
+                
+        while True:
+            inp = input("Type 'exit' to stop the program: ")
+            if inp == "exit":
+                break
     except Exception as e:
         print(f"Error starting container: {e}")
     finally:
