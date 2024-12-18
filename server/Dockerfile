@@ -40,17 +40,10 @@ RUN python3 -m venv .venv
 ENV PATH="/root/.venv/bin:${PATH}"
 
 # Install swh.graph python package
-RUN pip install swh.graph grpcio
+RUN pip install swh.graph
 
 # Download dataset
 RUN swh graph download --name 2021-03-23-popular-3k-python 2021-03-23-popular-3k-python/compressed
-
-# Install AWS CLI
-# RUN apt-get update && apt-get install -y \
-#     curl unzip && \
-#     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-#     unzip awscliv2.zip && \
-#     ./aws/install
 
 # Switch to the graph directory
 WORKDIR /root/2021-03-23-popular-3k-python
