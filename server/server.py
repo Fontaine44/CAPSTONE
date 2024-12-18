@@ -1,9 +1,6 @@
 from files.docker import *
 # from files.http_requests import *
 
-def print_line_break():
-    print("-"*20)
-
 def main():
     try:
         # Ensure the 'data' directory exists
