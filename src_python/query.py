@@ -11,7 +11,7 @@ with duckdb.connect() as con:
     ]
 
     # Path to the root directory of the dataset
-    dataset_root = r'../../../mnt/c/Users/rfon2/Documents/University/Fall2024/ECSE428/Dataset'
+    dataset_root = r'../../Dataset'
 
     for table in table_names:
         dataset_path = f"{dataset_root}/{table}"
@@ -30,7 +30,7 @@ JOIN
     snapshot_branch AS sb
     ON ov.snapshot = sb.snapshot_id
 JOIN
-    (SELECT id, message, author, date, date_offset, directory, FROM revision) AS r
+    revision AS r
     ON sb.target = r.id
 WHERE
     sb.target_type = 'revision' AND
@@ -39,6 +39,9 @@ GROUP BY
     o.url;
 """
 
+    # # Print schema of origin_visit_status table
+    # print(con.execute("SELECT * FROM origin_visit_status LIMIT 1").fetch_arrow_table().schema)
+    
     results = con.execute(query).arrow()
 
     results_df = results.to_pandas()
