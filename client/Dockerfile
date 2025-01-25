@@ -2,7 +2,7 @@
 ### docker build -t swh-graph-client .
 
 # To run the docker container
-### docker run -p 3000:3000 -d swh-graph-client
+### docker run -p 3000:3000 -d swh-graph-client --name swh-graph-client
 
 FROM debian:latest
 
