@@ -34,9 +34,9 @@ def check_docker_image_exists(image_name):
 def build_docker_image(image_name):
     try:
         # Build the Docker image
-        # if check_docker_image_exists(image_name):
-        #     print(f"Image '{image_name}' already exists.")
-        #     return True
+        if check_docker_image_exists(image_name):
+            print(f"Image '{image_name}' already exists.")
+            return True
         subprocess.run(["docker", "build", "-t", image_name, "."], check=True)
         print(f"Image '{image_name}' built successfully.")
     except subprocess.CalledProcessError as e:

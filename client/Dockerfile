@@ -2,7 +2,7 @@
 ### docker build -t swh-graph-client .
 
 # To run the docker container
-### docker run -p 3000:3000 -d swh-graph-client --name swh-graph-client
+### docker run -p 3000:3000 -it --name swh-graph-client swh-graph-client
 
 FROM debian:latest
 
@@ -27,8 +27,12 @@ RUN apt update && apt install -y \
 WORKDIR /root
 
 # COPY current app.py and controllers.py to the container
-COPY app.py /root
-COPY controllers.py /root
+# COPY app.py /root
+# COPY controllers.py /root
+
+RUN git clone https://github.com/Fontaine44/CAPSTONE.git \
+    && cd CAPSTONE \
+    && git checkout client-container
 
 # Create venv and instantiate it
 RUN python3 -m venv .venv
