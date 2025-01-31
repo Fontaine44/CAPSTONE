@@ -90,5 +90,6 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
     print(f"Number of commits (set): {len(commits)}")
     print(f"Number of commits (list): {len(commits_list)}")
 
+# The answer should be 873 commits and the age should be around 2.5 years
 if __name__ == "__main__":
     get_commits("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
