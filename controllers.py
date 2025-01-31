@@ -68,8 +68,8 @@ def get_stats() -> Tuple[Optional[swhgraph.StatsResponse], Optional[str]]:
 
 if __name__ == "__main__":
     # node, error = get_node("swh:1:cnt:ae0cdaa30908f360449bc5dc261dda2040e6f3ba")
-    # node, error = get_node("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
+    node, error = get_node("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
     # node, error = get_node("swh:1:snp:41e406ebbbbab2100abed3102c0f5236b4ff6973")
-    node, error = get_node("swh:1:rev:6c82eb89ce279f41f042f210131e8d54876087bf")
+    # node, error = get_node("swh:1:rev:6c82eb89ce279f41f042f210131e8d54876087bf")
     print(node.rev.author_date)
     print(node)

@@ -50,6 +50,7 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
     print(queue)
 
     commits = set()
+    commits_list = list()
     first = None
     last = None
 
@@ -73,6 +74,7 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
             first = commit
         last = commit
         commits.add(commit_id)
+        commits_list.append(commit)
     
     first_commit, err_one = get_node(first.swhid)
     last_commit, err_two = get_node(last.swhid)
@@ -85,7 +87,8 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
     # Print first and last commits with date
     print(f"First commit: {first_commit.swhid} on {first_commit.rev.author_date}")
     print(f"Last commit: {last_commit.swhid} on {last_commit.rev.author_date}")
-    print(f"Number of commits: {len(commits)}")
+    print(f"Number of commits (set): {len(commits)}")
+    print(f"Number of commits (list): {len(commits_list)}")
 
 if __name__ == "__main__":
     get_commits("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
