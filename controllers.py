@@ -1,6 +1,6 @@
 import grpc
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
@@ -66,10 +66,56 @@ def get_stats() -> Tuple[Optional[swhgraph.StatsResponse], Optional[str]]:
         error_msg = f"Unexpected error during channel setup: {e}"
         return None, error_msg
 
+def traverse(src: str, node_filter: Optional[str] = None) -> Tuple[Optional[List[swhgraph.Node]], Optional[str]]:
+    """
+    Traverses the graph starting from the given source node with an optional node filter.
+
+    Args:
+        src (str): The identifier of the source node to start the traversal from.
+        node_filter (Optional[str]): The type of nodes to return (e.g., "ori"). Defaults to None.
+
+    Returns:
+        Tuple[Optional[List[swhgraph.Node]], Optional[str]]:
+        - A list of nodes encountered during traversal if successful, None otherwise.
+        - An error message if an error occurs, None otherwise.
+    """
+    try:
+        with grpc.insecure_channel(GRAPH_GRPC_SERVER) as channel:
+            stub = swhgraph_grpc.TraversalServiceStub(channel)
+            try:
+                # Construct the TraversalRequest with optional node filter
+                if node_filter:
+                  request = swhgraph.TraversalRequest(
+                      src=[src],
+                      return_nodes=swhgraph.NodeFilter(types=node_filter),
+                      direction=swhgraph.GraphDirection.BACKWARD
+                  )
+                else:
+                  request = swhgraph.TraversalRequest(
+                      src=[src]
+                  )
+                
+                # Call the Traverse method and collect the streamed responses
+                response_stream = stub.Traverse(request)
+                nodes = list(response_stream)  # Collect all nodes from the stream
+                return nodes, None
+            except grpc.RpcError as e:
+                error_msg = f"gRPC request failed: {e.details()} (Code: {e.code()})"
+                return None, error_msg
+            except Exception as e:
+                error_msg = f"Unexpected error during stub.Traverse: {e}"
+                return None, error_msg
+    except grpc.RpcError as e:
+        error_msg = f"Failed to connect to gRPC server: {e.details()} (Code: {e.code()})"
+        return None, error_msg
+    except Exception as e:
+        error_msg = f"Unexpected error during channel setup: {e}"
+        return None, error_msg
+
+
 if __name__ == "__main__":
     # node, error = get_node("swh:1:cnt:ae0cdaa30908f360449bc5dc261dda2040e6f3ba")
-    # node, error = get_node("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
-    node, error = get_node("swh:1:snp:41e406ebbbbab2100abed3102c0f5236b4ff6973")
+    node, error = get_node("swh:1:rev:3d1aca21a75171463e6d131a2ccfeaed7e52b19a")
+    # node, error = traverse("swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176", "rev")
     # node, error = get_node("swh:1:rev:6c82eb89ce279f41f042f210131e8d54876087bf")
-    print(node.rev.author_date)
     print(node)
