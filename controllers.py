@@ -1,6 +1,7 @@
 import grpc
 
 from typing import Optional, Tuple, List
+from google.protobuf import field_mask_pb2
 
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
@@ -66,7 +67,7 @@ def get_stats() -> Tuple[Optional[swhgraph.StatsResponse], Optional[str]]:
         error_msg = f"Unexpected error during channel setup: {e}"
         return None, error_msg
 
-def traverse(src: str, node_filter: Optional[str] = None) -> Tuple[Optional[List[swhgraph.Node]], Optional[str]]:
+def traverse(src: List[str], node_filter: Optional[str] = None) -> Tuple[Optional[List[swhgraph.Node]], Optional[str]]:
     """
     Traverses the graph starting from the given source node with an optional node filter.
 
@@ -82,17 +83,17 @@ def traverse(src: str, node_filter: Optional[str] = None) -> Tuple[Optional[List
     try:
         with grpc.insecure_channel(GRAPH_GRPC_SERVER) as channel:
             stub = swhgraph_grpc.TraversalServiceStub(channel)
+            print(src)
             try:
                 # Construct the TraversalRequest with optional node filter
                 if node_filter:
                   request = swhgraph.TraversalRequest(
-                      src=[src],
-                      return_nodes=swhgraph.NodeFilter(types=node_filter),
-                      direction=swhgraph.GraphDirection.BACKWARD
+                      src=src,
+                      return_nodes=swhgraph.NodeFilter(types=node_filter)
                   )
                 else:
                   request = swhgraph.TraversalRequest(
-                      src=[src]
+                      src=src
                   )
                 
                 # Call the Traverse method and collect the streamed responses
@@ -115,7 +116,7 @@ def traverse(src: str, node_filter: Optional[str] = None) -> Tuple[Optional[List
 
 if __name__ == "__main__":
     # node, error = get_node("swh:1:cnt:ae0cdaa30908f360449bc5dc261dda2040e6f3ba")
-    node, error = get_node("swh:1:rev:3d1aca21a75171463e6d131a2ccfeaed7e52b19a")
+    node, error = traverse(["swh:1:rev:3d1aca21a75171463e6d131a2ccfeaed7e52b19a", "swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176"], "rev")
     # node, error = traverse("swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176", "rev")
     # node, error = get_node("swh:1:rev:6c82eb89ce279f41f042f210131e8d54876087bf")
     print(node)
