@@ -2,6 +2,53 @@ from controllers import get_node, traverse
 from typing import Optional, Tuple, List, Set
 from datetime import datetime
 
+def get_main_or_master_revision(successors):
+    """
+    Filters the successors to get the revision of the main or master branch.
+
+    Args:
+        successors (List[Successor]): The list of successor nodes.
+
+    Returns:
+        Optional[str]: The swhid of the main or master revision if found, None otherwise.
+    """
+    for successor in successors:
+        for label in successor.label:
+            label_name = label.name.decode('utf-8')
+            if label_name == "refs/heads/master" or label_name == "refs/heads/main":
+                return successor.swhid
+    return None
+
+def collect_revisions_and_timestamps(revision_ids: List[str]) -> Tuple[Set[str], List[int], Optional[str]]:
+    """
+    Collects distinct 'rev' nodes and their timestamps by traversing from the given revision IDs.
+
+    Args:
+        revision_ids (List[str]): The list of revision IDs to traverse from.
+
+    Returns:
+        Tuple[Set[str], List[int], Optional[str]]:
+        - A set of distinct 'rev' nodes.
+        - A list of commit timestamps.
+        - An error message if an error occurs, None otherwise.
+    """
+    distinct_revs: Set[str] = set()
+    timestamps: List[int] = []
+
+    for rev_id in revision_ids:
+        print(rev_id)
+        rev_nodes, error_msg = traverse([rev_id], "rev")
+        if error_msg:
+            return set(), [], error_msg
+        if rev_nodes:
+            for node in rev_nodes:
+                if node.swhid.startswith("swh:1:rev"):
+                    distinct_revs.add(node.swhid)
+                    if node.HasField("rev"):
+                        timestamps.append(node.rev.author_date)
+
+    return distinct_revs, timestamps, None
+
 def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str], Optional[int]]:
     """
     Fetches the latest revisions from the repository, counts the number of distinct 'rev' nodes,
@@ -28,58 +75,58 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         return None, error_msg, None
     if not origin_node:
         return None, "Origin not found", None
-    
-    # Step 2: Get the latest snapshot from the origin
+
+    # Step 2: Get the latest snapshot node
     if not origin_node.successor:
         return None, "No successors found for the origin", None
     
-    # Check if the first successor is a snapshot
-    if not origin_node.successor[0].swhid.startswith("swh:1:snp"):
-        return None, "No snapshot as successor", None
+    snapshot_node = None
+    for successor in reversed(origin_node.successor):
+        if successor.swhid.startswith("swh:1:snp"):
+            snapshot_id = successor.swhid
+            snapshot_node, error_msg = get_node(snapshot_id)
+            if error_msg:
+                return None, error_msg, None
+            if snapshot_node:
+                break
+
+    if not snapshot_node:
+        return None, "No snapshot found as successor", None
     
-    snapshot_id = origin_node.successor[0].swhid
-    snapshot_node, error_msg = get_node(snapshot_id)
+    print(snapshot_node)
     if error_msg:
         return None, error_msg, None
     if not snapshot_node:
         return None, "Snapshot not found", None
 
-    # Step 3: Extract all revisions from the snapshot
-    revision_ids = [commit.swhid for commit in snapshot_node.successor if commit.swhid.startswith("swh:1:rev")]
-    if not revision_ids:
-        return None, "No revisions found in snapshot", None
+       # Step 3: Extract the main or master revision from the snapshot
+    main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
+    if main_or_master_revision_id:
+        revision_ids = [main_or_master_revision_id]
+    else:
+        print("No main or master branch found") 
+        # If no main or master branch, use all revision successors
+        revision_ids = [successor.swhid for successor in snapshot_node.successor if successor.swhid.startswith("swh:1:rev")]
 
-    # Step 4: Traverse from each revision and collect distinct 'rev' nodes and their timestamps
-    distinct_revs: Set[str] = set()  # Use a set to store distinct 'rev' nodes
-    timestamps: List[int] = []  # List to store commit timestamps
+    # Step 4: Collect distinct 'rev' nodes and their timestamps
+    distinct_revs, timestamps, error_msg = collect_revisions_and_timestamps(revision_ids)
+    if error_msg:
+        return None, error_msg, None
 
-    for rev_id in revision_ids:
-        rev_nodes, error_msg = traverse([rev_id], "rev")
-        if error_msg:
-            return None, error_msg, None
-        if rev_nodes:
-            for node in rev_nodes:
-                if node.swhid.startswith("swh:1:rev"):
-                    distinct_revs.add(node.swhid)  # Add distinct 'rev' nodes to the set
-                    # Get the author_date timestamp for the revision
-                    if node.HasField("rev"):
-                        timestamps.append(node.rev.author_date)
+    if not distinct_revs:
+        return None, "No distinct revisions found", None
 
-    # Step 5: Calculate the age of the repository
-    if not timestamps:
-        return len(distinct_revs), None, None  # No timestamps available
+    # Calculate the age of the repository
+    if timestamps:
+        age = max(timestamps) - min(timestamps)
+    else:
+        age = None
 
-    # Find the latest and oldest commit timestamps
-    latest_timestamp = max(timestamps)
-    oldest_timestamp = min(timestamps)
-    repo_age_seconds = latest_timestamp - oldest_timestamp
-
-    # Step 6: Return the count of distinct 'rev' nodes and the repository age
-    return len(distinct_revs), None, repo_age_seconds
+    return len(distinct_revs), None, age
 
 # Example usage
 if __name__ == "__main__":
-    count, error, age = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
+    count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     if error:
         print(f"Error: {error}")
     else:

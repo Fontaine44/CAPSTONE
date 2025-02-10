@@ -115,8 +115,8 @@ def traverse(src: List[str], node_filter: Optional[str] = None) -> Tuple[Optiona
 
 
 if __name__ == "__main__":
-    # node, error = get_node("swh:1:cnt:ae0cdaa30908f360449bc5dc261dda2040e6f3ba")
-    node, error = traverse(["swh:1:rev:3d1aca21a75171463e6d131a2ccfeaed7e52b19a", "swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176"], "rev")
+    node, error = get_node("swh:1:snp:b92523aa95ddd89735f4bb0d3017ebc009fc0c68")
+    # node, error = traverse(["swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176"], "rev")
     # node, error = traverse("swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176", "rev")
-    # node, error = get_node("swh:1:rev:6c82eb89ce279f41f042f210131e8d54876087bf")
+    # node, error = get_node("swh:1:ori:dfc18ea9691caf7b0692a93b21d20a9504d5a9a2")
     print(node)
