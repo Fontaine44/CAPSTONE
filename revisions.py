@@ -33,7 +33,7 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
     if not node.successor:
         return None, "No successors found"
     
-    if len(node.successor) != 1 or (not node.successor[0].swhid.startswith("swh:1:snp")):
+    if len(node.successor) < 1 or (not node.successor[0].swhid.startswith("swh:1:snp")):
         return None, "No snapshot as successor"
     
     successor, error_msg = get_node(node.successor[0].swhid)
@@ -92,4 +92,6 @@ def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
 
 # The answer should be 873 commits and the age should be around 2.5 years
 if __name__ == "__main__":
-    get_commits("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
+    # get_commits("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")   # voila dashboards
+    r, err = get_commits("swh:1:ori:00a082063e1572f77e21b9dedef30635e60a99e8")   # crashing repo
+    print(err)

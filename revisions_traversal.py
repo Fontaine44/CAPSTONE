@@ -36,7 +36,7 @@ def collect_revisions_and_timestamps(revision_ids: List[str]) -> Tuple[Set[str],
     timestamps: List[int] = []
 
     for rev_id in revision_ids:
-        print(rev_id)
+        # print(rev_id)
         rev_nodes, error_msg = traverse([rev_id], "rev")
         if error_msg:
             return set(), [], error_msg
@@ -116,7 +116,7 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
     if not snapshot_node:
         return None, "No snapshot found as successor", None, None
     
-    print(snapshot_node)
+    # print(snapshot_node)
     if error_msg:
         return None, error_msg, None
     if not snapshot_node:
@@ -153,7 +153,8 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
 # Example usage
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
-    count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
+    # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
+    count, error, age, devs = get_revisions_from_latest("swh:1:ori:00a082063e1572f77e21b9dedef30635e60a99e8")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
