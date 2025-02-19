@@ -49,10 +49,32 @@ def collect_revisions_and_timestamps(revision_ids: List[str]) -> Tuple[Set[str],
 
     return distinct_revs, timestamps, None
 
+def get_num_of_devs(revisions):
+    """
+    Count the number of distinct developers from the revisions.
+
+    Args:
+        revisions (Set[str]): The set of distinct 'rev' nodes.
+
+    Returns:
+        Tuple[int, Optional[str]]:
+        - The number of distinct developers.
+        - An error message if an error occurs, None otherwise.
+    """
+    devs = set()
+    for rev in revisions:
+        node, error_msg = get_node(rev)
+        if error_msg:
+            return set(), error_msg
+        if node.HasField("rev"):
+            devs.add(node.rev.author) # We can change this to committer if needed
+    return len(devs), None
+
 def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str], Optional[int]]:
     """
-    Fetches the latest revisions from the repository, counts the number of distinct 'rev' nodes,
-    and calculates the age of the repository (difference between latest and oldest commit).
+    Fetches the latest revisions from the repository, counts the number of distinct 'rev' nodes, 
+    calculates the age of the repository (difference between latest and oldest commit), and
+    the number of developers.
 
     Args:
         swhid (str): The identifier of the repository to fetch revisions from.
@@ -63,22 +85,23 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         - An error message if an error occurs, None otherwise.
         - The age of the repository in seconds (latest commit timestamp - oldest commit timestamp),
           or None if it cannot be calculated.
+        - The number of distinct developers.
     """
     if not swhid:
         return None, "No swhid provided", None
     if not swhid.startswith("swh:1:ori:"):
-        return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None
+        return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None, None
     
     # Step 1: Get the origin node
     origin_node, error_msg = get_node(swhid)
     if error_msg:
-        return None, error_msg, None
+        return None, error_msg, None, None
     if not origin_node:
-        return None, "Origin not found", None
+        return None, "Origin not found", None, None
 
     # Step 2: Get the latest snapshot node
     if not origin_node.successor:
-        return None, "No successors found for the origin", None
+        return None, "No successors found for the origin", None, None
     
     snapshot_node = None
     for successor in reversed(origin_node.successor):
@@ -86,20 +109,20 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
             snapshot_id = successor.swhid
             snapshot_node, error_msg = get_node(snapshot_id)
             if error_msg:
-                return None, error_msg, None
+                return None, error_msg, None, None
             if snapshot_node:
                 break
 
     if not snapshot_node:
-        return None, "No snapshot found as successor", None
+        return None, "No snapshot found as successor", None, None
     
     print(snapshot_node)
     if error_msg:
         return None, error_msg, None
     if not snapshot_node:
-        return None, "Snapshot not found", None
+        return None, "Snapshot not found", None, None
 
-       # Step 3: Extract the main or master revision from the snapshot
+    # Step 3: Extract the main or master revision from the snapshot
     main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
     if main_or_master_revision_id:
         revision_ids = [main_or_master_revision_id]
@@ -111,10 +134,10 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
     # Step 4: Collect distinct 'rev' nodes and their timestamps
     distinct_revs, timestamps, error_msg = collect_revisions_and_timestamps(revision_ids)
     if error_msg:
-        return None, error_msg, None
+        return None, error_msg, None, None
 
     if not distinct_revs:
-        return None, "No distinct revisions found", None
+        return None, "No distinct revisions found", None, None
 
     # Calculate the age of the repository
     if timestamps:
@@ -122,14 +145,20 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
     else:
         age = None
 
-    return len(distinct_revs), None, age
+    distinct_devs, error_msg = get_num_of_devs(distinct_revs)
+    if error_msg:
+        return None, error_msg, None, None
+    return len(distinct_revs), None, age, distinct_devs
 
 # Example usage
 if __name__ == "__main__":
-    count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
+    # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
+    count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")
     if error:
         print(f"Error: {error}")
     else:
         print(f"Total number of distinct 'rev' nodes found: {count}")
         if age is not None:
             print(f"Repository age: {age} seconds (≈ {age // 86400} days)")
+        if devs is not None:
+            print(f"Number of distinct developers: {devs}")
