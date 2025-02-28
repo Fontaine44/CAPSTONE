@@ -114,11 +114,22 @@ def traverse(src: List[str], node_filter: Optional[str] = None) -> Tuple[Optiona
 
 
 if __name__ == "__main__":
+    
+    while True:
+        inp = input("Enter swhid: ")
+        if inp == "exit":
+            break
+        node, error = get_node(inp)
+        if error:
+            print(f"Error: {error}")
+        else:
+            print(node)
+    
     # node, error = get_node("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")      # voila repo
     # node, error = get_node("swh:1:snp:b92523aa95ddd89735f4bb0d3017ebc009fc0c68")
     # node, error = traverse(["swh:1:rev:cae2d26cf938e9dfe230a8d3ecd01e5db3f04176"], "rev")
     # node, error = traverse(["swh:1:rev:9d09aa1b405c14b67673d1dd067606b208293b7c"], "rev")
-    node, error = get_node("swh:1:rev:4d080d320952b0c66797d9d0fbea10e5e65b737e")
+    # node, error = get_node("swh:1:ori:0089824c1a5fc9ae7a9993bf7b7db33474472980")
     # node, error = get_node("swh:1:ori:dfc18ea9691caf7b0692a93b21d20a9504d5a9a2")      # Pypi repo
     # node, error = get_node("swh:1:ori:00a082063e1572f77e21b9dedef30635e60a99e8")        # crashing repo
-    print(node)
+    # print(node)
