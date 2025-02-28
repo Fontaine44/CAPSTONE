@@ -43,7 +43,7 @@ def get_metrics(input_file, output_file):
     # Write metrics to output file
     with open(output_file, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["swhid", "commits", "age (days)", "devs"])
+        writer.writerow(["swhid", "commits", "age", "devs"])
         for swhid, metric in metrics.items():
             writer.writerow([swhid, metric["commits"], metric["age"] // AGE_FACTOR, metric["devs"]])       
     
