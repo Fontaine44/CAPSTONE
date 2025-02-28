@@ -1,4 +1,4 @@
-from git_metrics import get_metrics_for_git_repos
+from get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
 from controllers import get_node
 import csv 
 import time
@@ -23,20 +23,27 @@ def get_metrics(input_file, output_file):
                 print(f"Error: {err} with repo: {origin_swhid}")
                 continue
 
-            # if 'github' in node.ori.url or 'gitlab' in node.ori.url or 'bitbucket' in node.ori.url:
-            #     print(origin_swhid, ":", node.ori.url)
-            #     git_metrics = get_metrics_for_git_repos(origin_swhid)
-            #     if 'error' in git_metrics:
-            #         print(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
-            #         continue
-            #     metrics[origin_swhid] = git_metrics
-            
-            print(origin_swhid, ":", node.ori.url)
-            git_metrics = get_metrics_for_git_repos(origin_swhid)
-            if 'error' in git_metrics:
-                print(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
-                continue
-            metrics[origin_swhid] = git_metrics
+            if 'github' in node.ori.url or 'gitlab' in node.ori.url or 'bitbucket' in node.ori.url:
+                print(origin_swhid, ":", node.ori.url)
+                git_metrics = get_metrics_for_git_repos(origin_swhid)
+                if 'error' in git_metrics:
+                    print(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
+                    continue
+                metrics[origin_swhid] = git_metrics
+            elif 'pypi' in node.ori.url:
+                print(origin_swhid, ":", node.ori.url)
+                pypi_metrics = get_metrics_for_pypi_repos(origin_swhid)
+                if 'error' in pypi_metrics:
+                    print(f"Error: {pypi_metrics['error']} with repo: {origin_swhid}")
+                    continue
+                metrics[origin_swhid] = pypi_metrics
+            else:
+                print(origin_swhid, ":", node.ori.url)
+                general_metrics = get_general_metrics(origin_swhid)
+                if 'error' in general_metrics:
+                    print(f"Error: {general_metrics['error']} with repo: {origin_swhid}")
+                    continue
+                metrics[origin_swhid] = general_metrics
 
             time.sleep(0.1)
 
@@ -49,4 +56,6 @@ def get_metrics(input_file, output_file):
     
 
 if __name__ == "__main__":
+    start_time = time.time()
     get_metrics(INPUT_FILE, OUTPUT_FILE)
+    print(f"Time taken: {time.time() - start_time} seconds")

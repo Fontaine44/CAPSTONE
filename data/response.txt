@@ -52,3 +52,4 @@ No main or master branch found
 swh:1:ori:0414a2890f8692fb63374be4dd8af893038c29b6 : https://pypi.org/project/oslo.i18n/
 No main or master branch found
 swh:1:ori:042878fc990d317c70941129b842ed34c5d26b86 : https://github.com/encode/apistar
+Time taken: 6.252244710922241 seconds
