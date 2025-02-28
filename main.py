@@ -5,6 +5,7 @@ import time
 
 INPUT_FILE = "data/origins.csv"
 OUTPUT_FILE = "data/metrics.csv"
+AGE_FACTOR = 86400
 
 def get_metrics(input_file, output_file):
     metrics = {}
@@ -37,14 +38,14 @@ def get_metrics(input_file, output_file):
                 continue
             metrics[origin_swhid] = git_metrics
 
-            time.sleep(0.5)
+            time.sleep(0.1)
 
     # Write metrics to output file
     with open(output_file, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["swhid", "commits", "age", "devs"])
+        writer.writerow(["swhid", "commits", "age (days)", "devs"])
         for swhid, metric in metrics.items():
-            writer.writerow([swhid, metric["commits"], metric["age"], metric["devs"]])       
+            writer.writerow([swhid, metric["commits"], metric["age"] // AGE_FACTOR, metric["devs"]])       
     
 
 if __name__ == "__main__":
