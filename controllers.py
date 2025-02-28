@@ -6,6 +6,8 @@ from google.protobuf import field_mask_pb2
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 
+import os
+
 GRAPH_GRPC_SERVER = "host.docker.internal:5010"
 
 def get_node(swhid: str) -> Tuple[Optional[swhgraph.GetNodeRequest], Optional[str]]:
@@ -119,11 +121,15 @@ if __name__ == "__main__":
         inp = input("Enter swhid: ")
         if inp == "exit":
             break
+        if inp == "clear":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            continue
         node, error = get_node(inp)
         if error:
             print(f"Error: {error}")
         else:
             print(node)
+        print("=====================================")
     
     # node, error = get_node("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")      # voila repo
     # node, error = get_node("swh:1:snp:b92523aa95ddd89735f4bb0d3017ebc009fc0c68")
