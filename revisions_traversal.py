@@ -113,25 +113,24 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
             snapshot_node, error_msg = get_node(snapshot_id)
             if error_msg:
                 return None, error_msg, None, None
-            if snapshot_node:
+            if snapshot_node and snapshot_node.successor:
                 break
 
     if not snapshot_node:
         return None, "No snapshot found as successor", None, None
     
-    # print(snapshot_node)
     if error_msg:
         return None, error_msg, None
     if not snapshot_node:
         return None, "Snapshot not found", None, None
 
     # Step 3: Extract the main or master revision from the snapshot
-    main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
-    if main_or_master_revision_id:
-        revision_ids = [main_or_master_revision_id]
+    if origin_node.ori.url.startswith("https://github.com"):
+        main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
+        if main_or_master_revision_id:
+            revision_ids = [main_or_master_revision_id]
     else:
-        print("No main or master branch found") 
-        # If no main or master branch, use all revision successors
+        # If no main or master branch or not a github repository, use all revision successors
         revision_ids = [successor.swhid for successor in snapshot_node.successor if successor.swhid.startswith("swh:1:rev")]
 
     # Step 4: Collect distinct 'rev' nodes and their timestamps

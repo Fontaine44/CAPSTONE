@@ -3,7 +3,7 @@ from controllers import get_node
 import csv 
 import time
 
-INPUT_FILE = "data/origins.csv"
+INPUT_FILE = "data/full_origins.csv"
 OUTPUT_FILE = "data/metrics.csv"
 AGE_FACTOR = 86400
 
@@ -29,6 +29,7 @@ def get_metrics(input_file, output_file):
                 if 'error' in git_metrics:
                     print(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
                     continue
+                git_metrics["url"] = node.ori.url
                 metrics[origin_swhid] = git_metrics
             elif 'pypi' in node.ori.url:
                 print(origin_swhid, ":", node.ori.url)
@@ -36,6 +37,7 @@ def get_metrics(input_file, output_file):
                 if 'error' in pypi_metrics:
                     print(f"Error: {pypi_metrics['error']} with repo: {origin_swhid}")
                     continue
+                pypi_metrics["url"] = node.ori.url
                 metrics[origin_swhid] = pypi_metrics
             else:
                 print(origin_swhid, ":", node.ori.url)
@@ -43,16 +45,17 @@ def get_metrics(input_file, output_file):
                 if 'error' in general_metrics:
                     print(f"Error: {general_metrics['error']} with repo: {origin_swhid}")
                     continue
+                general_metrics["url"] = node.ori.url
                 metrics[origin_swhid] = general_metrics
 
-            time.sleep(0.1)
+            # time.sleep(0.1)
 
     # Write metrics to output file
     with open(output_file, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["swhid", "commits", "age", "devs"])
+        writer.writerow(["swhid", "url", "commits", "age", "devs"])
         for swhid, metric in metrics.items():
-            writer.writerow([swhid, metric["commits"], metric["age"] // AGE_FACTOR, metric["devs"]])       
+            writer.writerow([swhid, metric["url"], metric["commits"], metric["age"] // AGE_FACTOR, metric["devs"]])       
     
 
 if __name__ == "__main__":
