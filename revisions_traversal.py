@@ -125,6 +125,7 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         return None, "Snapshot not found", None, None
 
     # Step 3: Extract the main or master revision from the snapshot
+    revision_ids = []
     if origin_node.ori.url.startswith("https://github.com"):
         main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
         if main_or_master_revision_id:
@@ -155,7 +156,7 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
-    count, error, age, devs = get_revisions_from_latest("swh:1:ori:00a082063e1572f77e21b9dedef30635e60a99e8")       # crashing repo
+    count, error, age, devs = get_revisions_from_latest("swh:1:ori:151ffa1e3b39cb5829df433c61032127b3612d5a")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
