@@ -1,5 +1,4 @@
 from get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
-from controllers import get_node
 import csv
 import time
 import logging
@@ -33,28 +32,21 @@ def get_metrics(input_file, output_file):
 
             url = node.ori.url
             if 'github' in url or 'gitlab' in url or 'bitbucket' in url:
-                logging.info(f"{origin_swhid} : {url}")
+                logging.info(f"Processing Git repository: {origin_swhid}")
                 git_metrics = get_metrics_for_git_repos(origin_swhid)
                 if 'error' in git_metrics:
                     logging.error(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
                     continue
-                git_metrics["url"] = url
                 metrics[origin_swhid] = git_metrics
             elif 'pypi' in url:
-                logging.info(f"{origin_swhid} : {url}")
+                logging.info(f"Processing PyPI repository: {origin_swhid}")
                 pypi_metrics = get_metrics_for_pypi_repos(origin_swhid)
                 if 'error' in pypi_metrics:
                     logging.error(f"Error: {pypi_metrics['error']} with repo: {origin_swhid}")
                     continue
-                pypi_metrics["url"] = url
                 metrics[origin_swhid] = pypi_metrics
             else:
-                logging.info(f"{origin_swhid} : {url}")
-                general_metrics = get_general_metrics(origin_swhid)
-                if 'error' in general_metrics:
-                    logging.error(f"Error: {general_metrics['error']} with repo: {origin_swhid}")
-                    continue
-                general_metrics["url"] = url
+                logging.info(f"Processing general repository: {origin_swhid}")
                 metrics[origin_swhid] = general_metrics
 
             # time.sleep(0.1)
@@ -62,10 +54,19 @@ def get_metrics(input_file, output_file):
     # Write metrics to output file
     with open(output_file, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["swhid", "url", "commits", "age", "devs"])
+        writer.writerow(["swhid", "url", "commits", "latest_commit", "age", "devCount", "devs", "c-index", "size"])
         for swhid, metric in metrics.items():
-            writer.writerow([swhid, metric["url"], metric["commits"], metric["age"] // AGE_FACTOR, metric["devs"]])       
-    
+            writer.writerow([
+                swhid,
+                metric["url"],
+                metric["commits"],
+                metric["latest_commit"],
+                metric["age"] // AGE_FACTOR,
+                metric["devCount"],
+                ";".join(metric["devs"]),
+                metric.get["c-index"],  # Include C-index if available
+                metric["size"]
+            ])       
 
 if __name__ == "__main__":
     start_time = time.time()

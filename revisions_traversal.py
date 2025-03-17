@@ -85,25 +85,35 @@ def collect_revisions_timestamps_and_devs_and_size(revision_ids: List[str]) -> T
 
     return len(distinct_revs), timestamps, len(devs), devs, total_size, commits_per_developer, None
 
-def dci_index(commits_per_developer: Dict[str, int]) -> float:
+def gini_index(commits_per_developer: Dict[str, int]) -> float:
     """
-    Calculates the Developer Contribution Index (DCI) based on the number of commits per developer.
+    Calculates the Gini index based on the number of commits per developer.
 
     Args:
         commits_per_developer (Dict[str, int]): A dictionary with the number of commits per developer.
 
     Returns:
-        float: The Developer Contribution Index (DCI).
+        float: The Gini index (0 = perfect equality, 1 = maximal inequality).
     """
-    total_commits = sum(commits_per_developer.values())
     n = len(commits_per_developer)
     
-    # Compute the fraction of commits per developer
-    p = [commits / total_commits for commits in commits_per_developer.values()]
+    if n == 0:
+        return 0  # Avoid division by zero
     
-    # Calculate the DCI using the formula
-    dci = sum((p_i - (1/n))**2 for p_i in p) / (1/n**2)
-    return dci
+    # Sort commit counts
+    commits = sorted(commits_per_developer.values())
+    
+    # Total number of commits
+    total_commits = sum(commits)
+    
+    if total_commits == 0:
+        return 0  # Avoid division by zero
+    
+    # Compute Gini index using proper formula
+    cumulative_sum = sum((i + 1) * commit for i, commit in enumerate(commits))
+    
+    gini = (2 * cumulative_sum) / (n * total_commits) - (n + 1) / n
+    return gini
 
 def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str], Optional[int], Optional[int], Optional[int]]:
     """ 
@@ -129,7 +139,9 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None, None, None
 
     # Step 1: Get the origin node
+    url = None
     origin_node, error_msg = get_node(swhid)
+    url = origin_node.ori.url
     if error_msg:
         return None, error_msg, None, None, None
     if not origin_node:
@@ -165,7 +177,7 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
     # Step 4: Collect distinct 'rev' nodes, timestamps, devs, and calculate repo size
     distinct_revs, timestamps, num_devs, devs, repo_size, commits_per_developer, error_msg = collect_revisions_timestamps_and_devs_and_size(revision_ids)
     if error_msg:
-        return None, None, None, None, None, None, error_msg
+        return None, None, None, None, None, None, None, None, error_msg
 
     # Calculate the age of the repository
     if timestamps:
@@ -174,23 +186,25 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         age = None
     
     if commits_per_developer:
-        dci = dci_index(commits_per_developer)
+        gini = gini_index(commits_per_developer)
     else:
-        dci = None
+        gini = None
 
-    return distinct_revs, max(timestamps), age, num_devs, devs, dci, repo_size, None
+    return url, distinct_revs, max(timestamps), age, num_devs, devs, gini, repo_size, None
 
 
 # Example usage
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
-    count, maxtime, age, devs, devset, dci, size, error = get_revisions_from_latest("swh:1:ori:ef61b26e04082a50d1d59254fd70c0129b2cb270")       # crashing repo
+    url, count, maxtime, age, devs, devset, gini, size, error = get_revisions_from_latest("swh:1:ori:008dc9bd6c1dc2c8f04176e718571c0e0a644d36")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
+      if url is not None:
+          print(f"Repository URL: {url}")
       if count is not None:
-        print(f"Total number commits found: {count}")
+          print(f"Total number commits found: {count}")
       if maxtime is not None:
           print(f"Latest commit timestamp: {datetime.utcfromtimestamp(maxtime)}")
       if age is not None:
@@ -199,7 +213,7 @@ if __name__ == "__main__":
           print(f"Number of distinct developers: {devs}")
       if devset is not None:
           print(f"List of distinct developers: {devset}")
-      if dci is not None:
-          print(f"Developer Contribution Index (DCI): {dci}")
+      if gini is not None:
+          print(f"Developer Contribution Index: {gini}")
       if size is not None:
           print(f"Repository size: {size} bytes")
