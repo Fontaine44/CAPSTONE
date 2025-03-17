@@ -1,5 +1,5 @@
 from controllers import get_node, traverse
-from typing import Optional, Tuple, List, Set
+from typing import Optional, Tuple, List, Set, Dict
 from datetime import datetime
 
 def get_main_or_master_revision(successors):
@@ -19,28 +19,45 @@ def get_main_or_master_revision(successors):
                 return successor.swhid
     return None
 
-def collect_revisions_timestamps_and_devs(revision_ids: List[str]) -> Tuple[Set[str], List[int], int, Optional[str]]:
-    """
-    Collects distinct 'rev' nodes, their timestamps, and counts the number of distinct developers by traversing from the given revision IDs.
+def collect_revisions_timestamps_and_devs_and_size(revision_ids: List[str]) -> Tuple[Set[str], List[int], int, Set[str], int, Dict[str, int], Optional[str]]:
+    """ 
+    Collects distinct 'rev' nodes, their timestamps, and counts the number of distinct developers by 
+    traversing from the given revision IDs, and calculates the size of the repository.
 
     Args:
         revision_ids (List[str]): The list of revision IDs to traverse from.
 
     Returns:
-        Tuple[Set[str], List[int], int, Optional[str]]:
+        Tuple[Set[str], List[int], int, Set[str], int, Dict[str, int], Optional[str]]:
         - A set of distinct 'rev' nodes.
         - A list of commit timestamps.
         - The number of distinct developers.
+        - The size of the repository in bytes.
+        - A dictionary with the number of commits per developer.
         - An error message if an error occurs, None otherwise.
     """
     distinct_revs: Set[str] = set()
     timestamps: List[int] = []
     devs: Set[str] = set()
+    total_size: int = 0
+    visited_files: Dict[str, int] = {}
+    commits_per_developer: Dict[str, int] = {}
+
+    def traverse_dir(dir_id: str):
+        nonlocal total_size
+        cnt_nodes, error_msg = traverse([dir_id], "cnt")
+        if error_msg:
+            total_size = None  # Mark size calculation as failed
+            return
+        for cnt_node in cnt_nodes:
+            if total_size is not None and cnt_node.swhid not in visited_files:
+                visited_files[cnt_node.swhid] = cnt_node.cnt.length
+                total_size += cnt_node.cnt.length
 
     for rev_id in revision_ids:
         rev_nodes, error_msg = traverse([rev_id], "rev")
         if error_msg:
-            return set(), [], 0, error_msg
+            return set(), [], 0, set(), 0, {}, error_msg
         if rev_nodes:
             for node in rev_nodes:
                 if node.swhid.startswith("swh:1:rev"):
@@ -48,120 +65,141 @@ def collect_revisions_timestamps_and_devs(revision_ids: List[str]) -> Tuple[Set[
                     if node.HasField("rev"):
                         timestamps.append(node.rev.author_date)
                         devs.add(node.rev.author)  # Add the author to the set of developers
+                        if node.rev.author in commits_per_developer:
+                            commits_per_developer[node.rev.author] += 1
+                        else:
+                            commits_per_developer[node.rev.author] = 1
 
-    return distinct_revs, timestamps, len(devs), None
+                # Calculate size from successor nodes
+                for successor in node.successor:
+                    if successor.swhid.startswith("swh:1:dir"):
+                        traverse_dir(successor.swhid)
+                    elif successor.swhid.startswith("swh:1:cnt"):
+                        if successor.swhid not in visited_files:
+                            cnt_node, error_msg = get_node(successor.swhid)
+                            if error_msg:
+                                total_size = None  # Mark size calculation as failed
+                            elif total_size is not None:
+                                visited_files[successor.swhid] = cnt_node.length
+                                total_size += cnt_node.length
 
-# def get_num_of_devs(revisions):
-#     """
-#     Count the number of distinct developers from the revisions.
+    return len(distinct_revs), timestamps, len(devs), devs, total_size, commits_per_developer, None
 
-#     Args:
-#         revisions (Set[str]): The set of distinct 'rev' nodes.
-
-#     Returns:
-#         Tuple[int, Optional[str]]:
-#         - The number of distinct developers.
-#         - An error message if an error occurs, None otherwise.
-#     """
-#     devs = set()
-#     for rev in revisions:
-#         node, error_msg = get_node(rev)
-#         if error_msg:
-#             return set(), error_msg
-#         if node.HasField("rev"):
-#             devs.add(node.rev.author) # We can change this to committer if needed
-#     return len(devs), None
-
-def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str], Optional[int]]:
+def dci_index(commits_per_developer: Dict[str, int]) -> float:
     """
-    Fetches the latest revisions from the repository, counts the number of distinct 'rev' nodes, 
-    calculates the age of the repository (difference between latest and oldest commit), and
-    the number of developers.
+    Calculates the Developer Contribution Index (DCI) based on the number of commits per developer.
 
+    Args:
+        commits_per_developer (Dict[str, int]): A dictionary with the number of commits per developer.
+
+    Returns:
+        float: The Developer Contribution Index (DCI).
+    """
+    total_commits = sum(commits_per_developer.values())
+    n = len(commits_per_developer)
+    
+    # Compute the fraction of commits per developer
+    p = [commits / total_commits for commits in commits_per_developer.values()]
+    
+    # Calculate the DCI using the formula
+    dci = sum((p_i - (1/n))**2 for p_i in p) / (1/n**2)
+    return dci
+
+def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str], Optional[int], Optional[int], Optional[int]]:
+    """ 
+    Fetches the latest revisions from the repository, counts the number of distinct 'rev' nodes, 
+    calculates the age of the repository (difference between latest and oldest commit), 
+    the number of developers, and the repository size.
+    
     Args:
         swhid (str): The identifier of the repository to fetch revisions from.
 
     Returns:
-        Tuple[Optional[int], Optional[str], Optional[int]]:
+        Tuple[Optional[int], Optional[str], Optional[int], Optional[int], Optional[int]]:
         - The count of distinct 'rev' nodes if successful, None otherwise.
         - An error message if an error occurs, None otherwise.
-        - The age of the repository in seconds (latest commit timestamp - oldest commit timestamp),
+        - The age of the repository in seconds (latest commit timestamp - oldest commit timestamp), 
           or None if it cannot be calculated.
         - The number of distinct developers.
+        - The size of the repository in bytes.
     """
     if not swhid:
-        return None, "No swhid provided", None
+        return None, "No swhid provided", None, None, None
     if not swhid.startswith("swh:1:ori:"):
-        return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None, None
-    
+        return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None, None, None
+
     # Step 1: Get the origin node
     origin_node, error_msg = get_node(swhid)
     if error_msg:
-        return None, error_msg, None, None
+        return None, error_msg, None, None, None
     if not origin_node:
-        return None, "Origin not found", None, None
+        return None, "Origin not found", None, None, None
 
     # Step 2: Get the latest snapshot node
     if not origin_node.successor:
-        return None, "No successors found for the origin", None, None
-    
-    # find first snapshot
+        return None, "No successors found for the origin", None, None, None
+
     snapshot_node = None
     for successor in origin_node.successor:
         if successor.swhid.startswith("swh:1:snp"):
             snapshot_id = successor.swhid
             snapshot_node, error_msg = get_node(snapshot_id)
             if error_msg:
-                return None, error_msg, None, None
+                return None, error_msg, None, None, None
             if snapshot_node and snapshot_node.successor:
                 break
 
     if not snapshot_node:
-        return None, "No snapshot found as successor", None, None
-    
-    if error_msg:
-        return None, error_msg, None
-    if not snapshot_node:
-        return None, "Snapshot not found", None, None
+        return None, "No snapshot found as successor", None, None, None
 
     # Step 3: Extract the main or master revision from the snapshot
     revision_ids = []
     if origin_node.ori.url.startswith("https://github.com"):
         main_or_master_revision_id = get_main_or_master_revision(snapshot_node.successor)
         if main_or_master_revision_id:
+            print(f"Main or master revision found: {main_or_master_revision_id}")
             revision_ids = [main_or_master_revision_id]
     else:
-        # If no main or master branch or not a github repository, use all revision successors
         revision_ids = [successor.swhid for successor in snapshot_node.successor if successor.swhid.startswith("swh:1:rev")]
 
-    # Step 4: Collect distinct 'rev' nodes and their timestamps
-    distinct_revs, timestamps, num_devs, error_msg = collect_revisions_timestamps_and_devs(revision_ids)
+    # Step 4: Collect distinct 'rev' nodes, timestamps, devs, and calculate repo size
+    distinct_revs, timestamps, num_devs, devs, repo_size, commits_per_developer, error_msg = collect_revisions_timestamps_and_devs_and_size(revision_ids)
     if error_msg:
-        return None, error_msg, None, None
-
-    if not distinct_revs:
-        return None, "No distinct revisions found", None, None
+        return None, None, None, None, None, None, error_msg
 
     # Calculate the age of the repository
     if timestamps:
         age = max(timestamps) - min(timestamps)
     else:
         age = None
+    
+    if commits_per_developer:
+        dci = dci_index(commits_per_developer)
+    else:
+        dci = None
 
-    if error_msg:
-        return None, error_msg, None, None
-    return len(distinct_revs), None, age, num_devs
+    return distinct_revs, max(timestamps), age, num_devs, devs, dci, repo_size, None
+
 
 # Example usage
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
-    count, error, age, devs = get_revisions_from_latest("swh:1:ori:151ffa1e3b39cb5829df433c61032127b3612d5a")       # crashing repo
+    count, maxtime, age, devs, devset, dci, size, error = get_revisions_from_latest("swh:1:ori:ef61b26e04082a50d1d59254fd70c0129b2cb270")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
-        print(f"Total number of distinct 'rev' nodes found: {count}")
-        if age is not None:
-            print(f"Repository age: {age} seconds (≈ {age // 86400} days)")
-        if devs is not None:
-            print(f"Number of distinct developers: {devs}")
+      if count is not None:
+        print(f"Total number commits found: {count}")
+      if maxtime is not None:
+          print(f"Latest commit timestamp: {datetime.utcfromtimestamp(maxtime)}")
+      if age is not None:
+          print(f"Repository age: {age} seconds (≈ {age // 86400} days)")
+      if devs is not None:
+          print(f"Number of distinct developers: {devs}")
+      if devset is not None:
+          print(f"List of distinct developers: {devset}")
+      if dci is not None:
+          print(f"Developer Contribution Index (DCI): {dci}")
+      if size is not None:
+          print(f"Repository size: {size} bytes")

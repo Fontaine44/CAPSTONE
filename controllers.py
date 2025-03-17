@@ -125,6 +125,7 @@ if __name__ == "__main__":
             os.system('cls' if os.name == 'nt' else 'clear')
             continue
         node, error = get_node(inp)
+        # node, error = traverse([inp], "dir")
         if error:
             print(f"Error: {error}")
         else:

@@ -11,10 +11,17 @@ def get_metrics_for_git_repos(swhid: str):
         Dict[str, Union[str, int]]:
         - The metrics for the repository.
     """
-    commits, error, age, devs = get_revisions_from_latest(swhid)
+    commits, latest_commit, age, devCount, devs, dci, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
-    return {"commits": commits, "age": age, "devs": devs}
+    return {
+        "commits": commits,
+        "latest_commit": latest_commit,
+        "age": age,
+        "devs": list(devs),  # Convert set to list
+        "dci": dci,
+        "size": size
+    }
 
 
 def get_metrics_for_pypi_repos(swhid: str):
@@ -28,10 +35,17 @@ def get_metrics_for_pypi_repos(swhid: str):
         Dict[str, Union[str, int]]:
         - The metrics for the repository.
     """
-    commits, error, age, devs = get_revisions_from_latest(swhid)
+    commits, latest_commit, age, devCount, devs, dci, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
-    return {"commits": commits, "age": age, "devs": devs}
+    return {
+        "commits": commits,
+        "latest_commit": latest_commit,
+        "age": age,
+        "devs": list(devs),  # Convert set to list
+        "dci": dci,
+        "size": size
+    }
 
 def get_general_metrics(swhid: str):
     """
@@ -44,8 +58,14 @@ def get_general_metrics(swhid: str):
         Dict[str, Union[str, int]]:
         - The metrics for the repository.
     """
-    # Placeholder function
-    commits, error, age, devs = get_revisions_from_latest(swhid)
+    commits, latest_commit, age, devCount, devs, dci, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
-    return {"commits": commits, "age": age, "devs": devs}
+    return {
+        "commits": commits,
+        "latest_commit": latest_commit,
+        "age": age,
+        "devs": list(devs),  # Convert set to list
+        "dci": dci,
+        "size": size
+    }
