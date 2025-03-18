@@ -1,4 +1,5 @@
 from get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
+from controllers import get_node
 import csv
 import time
 import logging
@@ -7,6 +8,9 @@ INPUT_FILE = "data/full_origins.csv"
 OUTPUT_FILE = "data/metrics.csv"
 LOG_FILE = "data/output_log.txt"
 AGE_FACTOR = 86400
+
+with open(LOG_FILE, "w") as f:
+    f.write("")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[
@@ -47,7 +51,7 @@ def get_metrics(input_file, output_file):
                 metrics[origin_swhid] = pypi_metrics
             else:
                 logging.info(f"Processing general repository: {origin_swhid}")
-                metrics[origin_swhid] = general_metrics
+                metrics[origin_swhid] = get_general_metrics
 
             # time.sleep(0.1)
 
