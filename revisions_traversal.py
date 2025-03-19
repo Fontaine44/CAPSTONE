@@ -134,22 +134,22 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
         - The size of the repository in bytes.
     """
     if not swhid:
-        return None, "No swhid provided", None, None, None
+        return None, None, None, None, None, None, None, None, "No swhid provided"
     if not swhid.startswith("swh:1:ori:"):
-        return None, "Invalid swhid format. Expected 'swh:1:ori:...'", None, None, None
+        return None, None, None, None, None, None, None, None, "Invalid swhid format"
 
     # Step 1: Get the origin node
     url = None
     origin_node, error_msg = get_node(swhid)
     url = origin_node.ori.url
     if error_msg:
-        return None, error_msg, None, None, None
+        return None, None, None, None, None, None, None, None, error_msg
     if not origin_node:
-        return None, "Origin not found", None, None, None
+        return None, None, None, None, None, None, None, None, "No origin node found"
 
     # Step 2: Get the latest snapshot node
     if not origin_node.successor:
-        return None, "No successors found for the origin", None, None, None
+        return None, None, None, None, None, None, None, None, "No successors found"
 
     snapshot_node = None
     for successor in origin_node.successor:
@@ -157,12 +157,12 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
             snapshot_id = successor.swhid
             snapshot_node, error_msg = get_node(snapshot_id)
             if error_msg:
-                return None, error_msg, None, None, None
+                return None, None, None, None, None, None, None, None, error_msg
             if snapshot_node and snapshot_node.successor:
                 break
 
     if not snapshot_node:
-        return None, "No snapshot found as successor", None, None, None
+        return None, None, None, None, None, None, None, None, "No snapshot found"
 
     # Step 3: Extract the main or master revision from the snapshot
     revision_ids = []
@@ -181,8 +181,10 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
 
     # Calculate the age of the repository
     if timestamps:
+        latest_commit = max(timestamps)
         age = max(timestamps) - min(timestamps)
     else:
+        latest_commit = None
         age = None
     
     if commits_per_developer:
@@ -190,14 +192,14 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
     else:
         gini = None
 
-    return url, distinct_revs, max(timestamps), age, num_devs, devs, gini, repo_size, None
+    return url, distinct_revs, latest_commit, age, num_devs, devs, gini, repo_size, None
 
 
 # Example usage
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
-    url, count, maxtime, age, devs, devset, gini, size, error = get_revisions_from_latest("swh:1:ori:008dc9bd6c1dc2c8f04176e718571c0e0a644d36")       # crashing repo
+    url, count, maxtime, age, devs, devset, gini, size, error = get_revisions_from_latest("swh:1:ori:04495b7c91afbe0ef6a6d31b3aaab2139e24f0d6")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
