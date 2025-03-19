@@ -4,8 +4,10 @@ import csv
 import time
 import logging
 
-INPUT_FILE = "data/full_origins.csv"
-OUTPUT_FILE = "data/metrics.csv"
+# INPUT_FILE = "data/full_origins.csv"
+INPUT_FILE = "data/origins.csv"
+# OUTPUT_FILE = "data/metrics.csv"
+OUTPUT_FILE = "data/partial_metrics.csv"
 LOG_FILE = "data/output_log.txt"
 AGE_FACTOR = 86400
 
@@ -51,7 +53,7 @@ def get_metrics(input_file, output_file):
                 metrics[origin_swhid] = pypi_metrics
             else:
                 logging.info(f"Processing general repository: {origin_swhid}")
-                metrics[origin_swhid] = get_general_metrics
+                metrics[origin_swhid] = get_general_metrics(origin_swhid)
 
             # time.sleep(0.1)
 
@@ -68,7 +70,7 @@ def get_metrics(input_file, output_file):
                 metric["age"] // AGE_FACTOR,
                 metric["devCount"],
                 ";".join(metric["devs"]),
-                metric.get["c-index"],  # Include C-index if available
+                metric["c-index"] if "c-index" in metric else "",  # Include C-index if available
                 metric["size"]
             ])       
 

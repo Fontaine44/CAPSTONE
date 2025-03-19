@@ -20,7 +20,7 @@ def get_metrics_for_git_repos(swhid: str):
         "latest_commit": latest_commit,
         "age": age,
         "devCount": devCount,
-        "devs": list(devs),  # Convert set to list
+        "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
         "size": size
     }
@@ -46,7 +46,7 @@ def get_metrics_for_pypi_repos(swhid: str):
         "latest_commit": latest_commit,
         "age": age,
         "devCount": devCount,
-        "devs": list(devs),  # Convert set to list
+        "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
         "size": size
     }
@@ -71,7 +71,7 @@ def get_general_metrics(swhid: str):
         "latest_commit": latest_commit,
         "age": age,
         "devCount": devCount,
-        "devs": list(devs),  # Convert set to list
+        "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
         "size": size
     }
