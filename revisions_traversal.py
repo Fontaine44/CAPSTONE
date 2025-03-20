@@ -69,19 +69,17 @@ def collect_revisions_timestamps_and_devs_and_size(revision_ids: List[str]) -> T
                             commits_per_developer[node.rev.author] += 1
                         else:
                             commits_per_developer[node.rev.author] = 1
-
-                # Calculate size from successor nodes
-                for successor in node.successor:
-                    if successor.swhid.startswith("swh:1:dir"):
-                        traverse_dir(successor.swhid)
-                    elif successor.swhid.startswith("swh:1:cnt"):
-                        if successor.swhid not in visited_files:
-                            cnt_node, error_msg = get_node(successor.swhid)
-                            if error_msg:
-                                total_size = None  # Mark size calculation as failed
-                            elif total_size is not None:
-                                visited_files[successor.swhid] = cnt_node.length
-                                total_size += cnt_node.length
+    revnode, error_msg = get_node(revision_ids[0])
+    if error_msg:
+        return None, None, None, None, None, None, error_msg
+    if revnode and revnode.successor:
+        for successor in revnode.successor:
+            if successor.swhid.startswith("swh:1:dir"):
+                traverse_dir(successor.swhid)
+            if successor.swhid.startswith("swh:1:cnt"):
+                if total_size is not None and successor.swhid not in visited_files:
+                    visited_files[successor.swhid] = successor.cnt.length
+                    total_size += successor.cnt.length
 
     return len(distinct_revs), timestamps, len(devs), devs, total_size, commits_per_developer, None
 
@@ -199,7 +197,7 @@ def get_revisions_from_latest(swhid: str) -> Tuple[Optional[int], Optional[str],
 if __name__ == "__main__":
     # count, error, age = get_revisions_from_latest("swh:1:ori:0259ab09d7832d244383f26fab074d04bfba11cd")
     # count, error, age, devs = get_revisions_from_latest("swh:1:ori:006762b49f6052c9648a93fabcddeb68c90d2382")     # voila dashboards
-    url, count, maxtime, age, devs, devset, gini, size, error = get_revisions_from_latest("swh:1:ori:04495b7c91afbe0ef6a6d31b3aaab2139e24f0d6")       # crashing repo
+    url, count, maxtime, age, devs, devset, gini, size, error = get_revisions_from_latest("swh:1:ori:018438a0237516842ca1d683f6566e66dabe0722")       # crashing repo
     if error:
         print(f"Error: {error}")
     else:
