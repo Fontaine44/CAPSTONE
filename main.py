@@ -1,5 +1,6 @@
 from get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
 from controllers import get_node
+from datetime import datetime
 import csv
 import time
 import logging
@@ -66,7 +67,7 @@ def get_metrics(input_file, output_file):
                 swhid,
                 metric["url"],
                 metric["commits"],
-                metric["latest_commit"],
+                datetime.utcfromtimestamp(metric["latest_commit"]).strftime('%Y-%m-%d %H:%M:%S'),
                 metric["age"] // AGE_FACTOR,
                 metric["devCount"],
                 ";".join(metric["devs"]),
