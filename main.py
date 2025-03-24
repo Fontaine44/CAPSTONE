@@ -5,10 +5,10 @@ import csv
 import time
 import logging
 
-# INPUT_FILE = "data/full_origins.csv"
-INPUT_FILE = "data/origins.csv"
-# OUTPUT_FILE = "data/metrics.csv"
-OUTPUT_FILE = "data/partial_metrics.csv"
+INPUT_FILE = "data/full_origins.csv"
+INPUT_FILE_TEST = "data/origins.csv"
+OUTPUT_FILE = "data/metrics.csv"
+OUTPUT_FILE_TEST = "data/partial_metrics.csv"
 LOG_FILE = "data/output_log.txt"
 AGE_FACTOR = 86400
 
@@ -99,4 +99,5 @@ def get_metrics(input_file, output_file):
 if __name__ == "__main__":
     start_time = time.time()
     get_metrics(INPUT_FILE, OUTPUT_FILE)
+    # get_metrics(INPUT_FILE_TEST, OUTPUT_FILE_TEST)
     logging.info(f"Time taken: {time.time() - start_time} seconds")
