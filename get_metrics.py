@@ -1,4 +1,5 @@
 from revisions_traversal import get_revisions_from_latest
+from get_source import get_source
 
 def get_metrics_for_git_repos(swhid: str):
     """
@@ -14,6 +15,10 @@ def get_metrics_for_git_repos(swhid: str):
     url, commits, latest_commit, age, devCount, devs, gini, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
+
+    # Get source
+    source = get_source(url)
+
     return {
         "url": url,
         "commits": commits,
@@ -22,7 +27,8 @@ def get_metrics_for_git_repos(swhid: str):
         "devCount": devCount,
         "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
-        "size": size
+        "size": size,
+        "source": source
     }
 
 
@@ -40,6 +46,10 @@ def get_metrics_for_pypi_repos(swhid: str):
     url, commits, latest_commit, age, devCount, devs, gini, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
+
+    # Get source
+    source = get_source(url)
+
     return {
         "url": url,
         "commits": commits,
@@ -48,7 +58,8 @@ def get_metrics_for_pypi_repos(swhid: str):
         "devCount": devCount,
         "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
-        "size": size
+        "size": size,
+        "source": source
     }
 
 def get_general_metrics(swhid: str):
@@ -65,6 +76,10 @@ def get_general_metrics(swhid: str):
     url, commits, latest_commit, age, devCount, devs, gini, size, error = get_revisions_from_latest(swhid)
     if error:
         return {"error": error}
+
+    # Get source
+    source = get_source(url)
+
     return {
         "url": url,
         "commits": commits,
@@ -73,5 +88,6 @@ def get_general_metrics(swhid: str):
         "devCount": devCount,
         "devs": [str(x) for x in devs],  # Convert set to list
         "c-index": gini,
-        "size": size
+        "size": size,
+        "source": source
     }

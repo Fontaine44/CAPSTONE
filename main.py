@@ -38,30 +38,50 @@ def get_metrics(input_file, output_file):
                 continue
 
             url = node.ori.url
+
             if 'github' in url or 'gitlab' in url or 'bitbucket' in url:
                 logging.info(f"Processing Git repository: {origin_swhid}")
-                git_metrics = get_metrics_for_git_repos(origin_swhid)
-                if 'error' in git_metrics:
-                    logging.error(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
+                try:
+                    git_metrics = get_metrics_for_git_repos(origin_swhid)
+                except Exception as e:
+                    logging.error(f"Error: {e} with repo: {origin_swhid}")
                     continue
-                metrics[origin_swhid] = git_metrics
+                finally:
+                    if 'error' in git_metrics:
+                        logging.error(f"Error: {git_metrics['error']} with repo: {origin_swhid}")
+                        continue
+                    metrics[origin_swhid] = git_metrics
             elif 'pypi' in url:
                 logging.info(f"Processing PyPI repository: {origin_swhid}")
-                pypi_metrics = get_metrics_for_pypi_repos(origin_swhid)
-                if 'error' in pypi_metrics:
-                    logging.error(f"Error: {pypi_metrics['error']} with repo: {origin_swhid}")
+                try:
+                    pypi_metrics = get_metrics_for_pypi_repos(origin_swhid)
+                except Exception as e:
+                    logging.error(f"Error: {e} with repo: {origin_swhid}")
                     continue
-                metrics[origin_swhid] = pypi_metrics
+                finally:
+                    if 'error' in pypi_metrics:
+                        logging.error(f"Error: {pypi_metrics['error']} with repo: {origin_swhid}")
+                        continue
+                    metrics[origin_swhid] = pypi_metrics
             else:
                 logging.info(f"Processing general repository: {origin_swhid}")
-                metrics[origin_swhid] = get_general_metrics(origin_swhid)
+                try:
+                    other_metrics = get_general_metrics(origin_swhid)
+                except Exception as e:
+                    logging.error(f"Error: {e} with repo: {origin_swhid}")
+                    continue
+                finally:
+                    if 'error' in other_metrics:
+                        logging.error(f"Error: {other_metrics['error']} with repo: {origin_swhid}")
+                        continue
+                    metrics[origin_swhid] = other_metrics
 
             # time.sleep(0.1)
 
     # Write metrics to output file
     with open(output_file, "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["swhid", "url", "commits", "latest_commit", "age", "devCount", "devs", "c-index", "size"])
+        writer.writerow(["swhid", "url", "commits", "latest_commit", "age", "devCount", "devs", "c-index", "size", "source"])
         for swhid, metric in metrics.items():
             writer.writerow([
                 swhid,
@@ -72,7 +92,8 @@ def get_metrics(input_file, output_file):
                 metric["devCount"],
                 ";".join(metric["devs"]),
                 metric["c-index"] if "c-index" in metric else "",  # Include C-index if available
-                metric["size"]
+                metric["size"],
+                metric["source"]
             ])       
 
 if __name__ == "__main__":
