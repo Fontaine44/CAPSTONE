@@ -1,5 +1,5 @@
-from get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
-from controllers import get_node
+from helpers.get_metrics import get_metrics_for_git_repos, get_metrics_for_pypi_repos, get_general_metrics
+from helpers.controllers import get_node
 from datetime import datetime
 import csv
 import time
