@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5009:5009"  # Map the server's exposed port to the host
+      - "5010:50091"
+    volumes:
+      - ./server/data:/root/2021-03-23-popular-3k-python  # Mount local data for persistence (optional)
+    environment:
+      - RUSTFLAGS=-C target-cpu=native
+    command: ["swh", "graph", "grpc-serve", "-g", "compressed/graph"]
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Assuming the client runs on port 3000
+    environment:
+      - API_URL=http://server:5009  # Example of connecting to the server
+    volumes:
+      - ./client:/app  # Mount local client files for hot-reloading (optional)
+    command: ["/bin/bash"]  # Replace with the actual command to start the client
