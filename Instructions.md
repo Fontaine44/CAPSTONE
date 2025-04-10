@@ -1,4 +1,4 @@
-## For the Server (On the machine)
+## For the Server (On your machine machine)
 
 ### For macOS and Linux
 1. Navigate into the server directory through the terminal
@@ -13,4 +13,9 @@
 3. Activate venv with this command: `.\.venv\Scripts\activate`
 4. Install requirements with this command: `pip install -r files\requirements.txt`
 5. Run the program with this command: `python main.py`
+
+## For the Client
+
+1. Navigate into the client directory through the terminal
+
 
