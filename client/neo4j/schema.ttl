@@ -1,0 +1,90 @@
+@prefix ex: <http://example.org/schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+@prefix owl: <http://www.w3.org/2002/07/owl#> . 
+
+
+# Define Repository class
+ex:Repository a rdfs:Class ;
+    rdfs:label "Repository" .
+
+# Define properties for Repository
+ex:swhid a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:string ; 
+    rdfs:label "Software Heritage ID" .
+
+ex:url a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:string ; 
+    rdfs:label "url" .
+
+ex:commits a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:integer ;
+    rdfs:label "number of commits" .
+
+ex:age a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:integer ;
+    rdfs:label "age" .
+
+ex:cIndex a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:float ;
+    rdfs:label "c-index" .
+
+ex:lastUpdated a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:date ;
+    rdfs:label "last updated" .
+
+ex:size a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:integer ;
+    rdfs:label "size" .
+
+ex:devCount a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range xsd:integer ;
+    rdfs:label "number of devs" .
+
+
+# Define Source class
+ex:Source a rdfs:Class ;
+    rdfs:label "Source" .
+
+
+# Define Dev class
+ex:Dev a rdfs:Class ;
+    rdfs:label "Dev" .
+
+# Define properties for Dev
+ex:hash a rdf:Property ;
+    rdfs:domain ex:Dev ;
+    rdfs:range xsd:string ;
+    rdfs:label "hash" .
+
+
+# Define relationships
+ex:contributedTo a rdf:Property ;
+    rdfs:domain ex:Dev ;
+    rdfs:range ex:Repository ;
+    rdfs:label "contributed to" .
+
+ex:hasContributor a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range ex:Dev ;
+    rdfs:label "has contributor" ;
+    owl:inverseOf ex:contributedTo .
+
+ex:hostedOn a rdf:Property ;
+    rdfs:domain ex:Repository ;
+    rdfs:range ex:Source ;
+    rdfs:label "hosted on" .
+
+ex:contributesToSource a rdf:Property ;
+    rdfs:domain ex:Dev ;
+    rdfs:range ex:Source ;
+    rdfs:label "contributes to source" .
