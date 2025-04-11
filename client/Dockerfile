@@ -2,7 +2,7 @@
 ### docker build -t swh-graph-client .
 
 # To run the docker container
-### docker run -p 3000:3000 -it --name swh-graph-client swh-graph-client
+### docker run -it --name swh-graph-client swh-graph-client
 
 FROM debian:latest
 
@@ -31,8 +31,7 @@ WORKDIR /root
 # COPY controllers.py /root
 
 RUN git clone https://github.com/Fontaine44/CAPSTONE.git \
-    && cd CAPSTONE \
-    && git checkout client-container
+    && cd CAPSTONE/client 
 
 # Create venv and instantiate it
 RUN python3 -m venv .venv
@@ -41,11 +40,8 @@ ENV PATH="/root/.venv/bin:${PATH}"
 # Install swh.graph python package
 RUN pip install swh.graph grpcio
 
-# Install flask
-RUN pip install flask
-
-# Expose API port
-EXPOSE 3000
+# Install all dependencies
+# RUN pip install -r requirements.txt
 
 # Default command to start the server with a specified dataset (path to be set on run)
 CMD ["/bin/bash"]
