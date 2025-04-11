@@ -1,13 +1,7 @@
-# To build the docker container
-### docker build -t swh-graph-service .
-
-# To run the docker container
-### docker run -p 5009:5009 -it swh-graph-service
-
-# To run inside the container
-### swh graph rpc-serve -g compressed/graph
-
 FROM debian:latest
+
+# Choose dataset to download
+ENV DATASET=2021-03-23-popular-3k-python
 
 # Install dependencies
 RUN apt update && apt install -y \
@@ -43,10 +37,10 @@ ENV PATH="/root/.venv/bin:${PATH}"
 RUN pip install swh.graph tqdm
 
 # Download dataset
-RUN swh graph download --name 2021-03-23-popular-3k-python 2021-03-23-popular-3k-python/compressed
+RUN swh graph download --name ${DATASET} ${DATASET}/compressed
 
 # Switch to the graph directory
-WORKDIR /root/2021-03-23-popular-3k-python
+WORKDIR /root/${DATASET}
 
 # Reindex the dataset
 RUN RUSTFLAGS="-C target-cpu=native" cargo install swh-graph
@@ -57,10 +51,10 @@ RUN RUSTFLAGS="-C target-cpu=native" cargo install swh-graph
 RUN swh graph reindex --ef compressed/graph
 
 # Create the /output directory
-RUN mkdir -p /root/2021-03-23-popular-3k-python/output
+RUN mkdir -p /root/${DATASET}/output
 
 # Decompress the ids
-RUN zstd -d /root/2021-03-23-popular-3k-python/compressed/graph.nodes.csv.zst -o /root/2021-03-23-popular-3k-python/output/graph.nodes.csv
+RUN zstd -d /root/${DATASET}/compressed/graph.nodes.csv.zst -o /root/${DATASET}/output/graph.nodes.csv
 
 # Expose the API server port
 EXPOSE 50091

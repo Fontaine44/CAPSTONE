@@ -1,9 +1,3 @@
-# To build the docker container
-### docker build -t swh-graph-client .
-
-# To run the docker container
-### docker run -it --name swh-graph-client swh-graph-client
-
 FROM debian:latest
 
 # Install dependencies
@@ -22,6 +16,7 @@ RUN apt update && apt install -y \
     libssl-dev \
     pkg-config \
     openssl \
+    vim \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 WORKDIR /root
