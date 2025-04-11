@@ -1,7 +1,6 @@
 import grpc
 
 from typing import Optional, Tuple, List
-from google.protobuf import field_mask_pb2
 
 import swh.graph.grpc.swhgraph_pb2 as swhgraph
 import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc

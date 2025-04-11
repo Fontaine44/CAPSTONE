@@ -1,10 +1,7 @@
-from controllers import get_node
+from helpers.controllers import get_node
 from collections import deque
 
 from typing import Optional, Tuple
-
-import swh.graph.grpc.swhgraph_pb2 as swhgraph
-import swh.graph.grpc.swhgraph_pb2_grpc as swhgraph_grpc
 
 def get_commits(swhid: str) -> Tuple[Optional[str], Optional[str]]:
     """

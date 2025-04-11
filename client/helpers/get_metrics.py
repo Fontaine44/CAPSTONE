@@ -1,4 +1,4 @@
-from revisions_traversal import get_revisions_from_latest
+from helpers.revisions_traversal import get_revisions_from_latest
 from get_source import get_source
 
 def get_metrics_for_git_repos(swhid: str):
