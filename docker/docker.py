@@ -1,11 +1,6 @@
 import subprocess
 import os
 
-IMAGE_NAME = "swh-graph-service"
-CONTAINER_NAME = "swh-graph-container"
-TARGET_PATH = "/root/2021-03-23-popular-3k-python/output/graph.nodes.csv"
-DEST_PATH = os.path.join(os.getcwd(), "files", "data", "graph.nodes.csv")
-
 # Function to check if image exists already
 def check_docker_image_exists(image_name):
     try:
@@ -31,13 +26,13 @@ def check_docker_image_exists(image_name):
         return False
     
 # Function to build the Docker image
-def build_docker_image(image_name):
+def build_docker_image(image_name, file_path):
     try:
         # Build the Docker image
         if check_docker_image_exists(image_name):
             print(f"Image '{image_name}' already exists.")
             return True
-        subprocess.run(["docker", "build", "-t", image_name, "."], check=True)
+        subprocess.run(["docker", "build", "-t", image_name, file_path], check=True)
         print(f"Image '{image_name}' built successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error building image: {e}")
@@ -45,10 +40,10 @@ def build_docker_image(image_name):
     return True
 
 # Function to run the Docker container
-def run_docker_container(image_name, container_name):
+def run_docker_container(container_name, cmd):
     try:
         # Run the container with interactive mode
-        subprocess.run(["docker", "run", "-d", "-p", "5009:5009", "-p", "5010:50091", "--name", container_name, image_name], check=True)
+        subprocess.run(cmd, check=True)
         print(f"Container '{container_name}' started successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error running container: {e}")
@@ -91,24 +86,3 @@ def remove_docker_container(container_name):
         print(f"Error removing container: {e}")
         return False
     return True
-
-def run_container():
-    try:
-        # Ensure the 'data' directory exists
-        os.makedirs(os.path.dirname(DEST_PATH), exist_ok=True)
-
-        # Build the Docker image
-        if build_docker_image(IMAGE_NAME):
-            # Run the container
-            if run_docker_container(IMAGE_NAME, CONTAINER_NAME):
-                # Copy the file from the container to the host
-                docker_cp(CONTAINER_NAME, TARGET_PATH, DEST_PATH)
-    except Exception as e:
-        print(f"Error starting container: {e}")
-    finally:
-        # Stop and remove the container
-        stop_docker_container(CONTAINER_NAME)
-        remove_docker_container(CONTAINER_NAME)
-
-if __name__ == "__main__":
-    print("hi")

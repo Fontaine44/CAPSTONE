@@ -26,22 +26,20 @@ RUN apt update && apt install -y \
 
 WORKDIR /root
 
-# COPY current app.py and controllers.py to the container
-# COPY app.py /root
-# COPY controllers.py /root
+# Clone repository
+RUN git clone https://github.com/Fontaine44/CAPSTONE.git
 
-RUN git clone https://github.com/Fontaine44/CAPSTONE.git \
-    && cd CAPSTONE/client 
+# Set working directory
+WORKDIR /root/CAPSTONE/client
 
 # Create venv and instantiate it
 RUN python3 -m venv .venv
-ENV PATH="/root/.venv/bin:${PATH}"
 
-# Install swh.graph python package
-RUN pip install swh.graph grpcio
+# Activate venv
+ENV PATH="/root/CAPSTONE/client/.venv/bin:$PATH"
 
 # Install all dependencies
-# RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Default command to start the server with a specified dataset (path to be set on run)
 CMD ["/bin/bash"]

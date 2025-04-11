@@ -1,5 +1,5 @@
 .venv
-server/files/data
+server/files/data/*.csv
 __*
 client/data/
 .env
