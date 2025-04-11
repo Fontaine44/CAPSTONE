@@ -1,3 +1,5 @@
 .venv
 server/files/data
 __*
+client/data/
+.env
